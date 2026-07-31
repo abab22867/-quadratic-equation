@@ -1,45 +1,73 @@
 import cmath
+import math
 
-def data_input():
-    while True:
-        try:
-            n = float(input("Введите число: "))
-            return n
-        except ValueError:
-            print("Необходимо ввести число")
+class Equation:
+    def __init__(self, a, b, c):
+        self.a = a
+        self.b = b
+        self.c = c
 
-def discriminant(a, b, c):
-    D = b ** 2 - 4 * a * c
-    return D
+    @staticmethod
+    def validate_coefficients(a, b, c):
+        if not all(isinstance(x, (int, float)) for x in [a, b, c]):
+            raise TypeError("Все коэффициенты должны быть числами")
+        return True
 
-def formula(a, b, c):
-    x1 = (-b + cmath.sqrt(discriminant(a, b, c))) / (2 * a)
-    x2 = (-b - cmath.sqrt(discriminant(a, b, c))) / (2 * a)
-    return x1, x2
-
-def main(a, b, c):
-    x = 'Не существует решения'
-    if a == 0:
-        if b == 0:
-            if c == 0:
-                x = 'Бесконечное количество решений'
-            else:
-                pass
+    def checking_special_cases(self):
+        if self.a == 0 and self.b == 0 and self.c == 0:
+            print('Бесконечное количество решений')
+            return 'infinite'
+        elif self.a == 0 and self.b == 0 and self.c != 0:
+            print('Не существует решения')
+            return 'no_solution'
+        elif self.a == 0 and self.b != 0:
+            root = -self.c / self.b
+            print(f'Линейное уравнение, корень: {root}')
+            return 'linear', root
         else:
-            x = - c / b
-    elif discriminant(a, b, c) < 0:
-        print("Корней нет на множестве действительных чисел")
-        print('Комплексные корни:')
-        x = formula(a, b, c)
-    elif discriminant(a, b, c) == 0:
-        x = formula(a, b, c)[0].real
-    elif discriminant(a, b, c) > 0:
-        x = (formula(a, b, c)[0].real, formula(a, b, c)[1].real)
-    return x
+            print('Крайних случаев нет')
+            return 'quadratic'
 
-print('Коэффициенты квадратного уравнения:')
-a = data_input()
-b = data_input()
-c = data_input()
-print('Корни квадратного уравнения:')
-print(main(a, b, c))
+class QuadraticEquation(Equation):
+    def discriminant(self):
+        return self.b ** 2 - 4 * self.a * self.c
+    def calculating_roots(self):
+        D = self.discriminant()
+        if D < 0:
+            self.x1 = (-self.b + cmath.sqrt(D)) / (2 * self.a)
+            self.x2 = (-self.b - cmath.sqrt(D)) / (2 * self.a)
+        else:
+            self.x1 = (-self.b + math.sqrt(D)) / (2 * self.a)
+            self.x2 = (-self.b - math.sqrt(D)) / (2 * self.a)
+        return self.x1, self.x2
+
+    def printing_results(self):
+        D = self.discriminant()
+        if D < 0:
+            print("Корней нет на множестве действительных чисел")
+            print('Комплексные корни:')
+            roots = self.calculating_roots()
+            print(f"x1 = {roots[0]}")
+            print(f"x2 = {roots[1]}")
+        else:
+            roots = self.calculating_roots()
+            if roots[0] == roots[1]:
+                print(f"Один корень: x = {roots[0]}")
+            else:
+                print(f"x1 = {roots[0]}")
+                print(f"x2 = {roots[1]}")
+
+print('Введите коэффициенты квадратного уравнения (a b c):')
+try:
+    a, b, c = map(float, input().split())
+    if Equation.validate_coefficients(a, b, c):
+        equation = QuadraticEquation(a, b, c)
+        result = equation.checking_special_cases()
+        if result == 'quadratic':
+            roots = equation.printing_results()
+except ValueError as e:
+    print(f"Ошибка ввода: {e}")
+except TypeError as e:
+    print(f"Ошибка типа: {e}")
+except ZeroDivisionError:
+    print("Ошибка: деление на ноль")
